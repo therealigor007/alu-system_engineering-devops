@@ -1,12 +1,24 @@
 #!/usr/bin/env bash
-# Configures an Ubuntu server with Nginx
+# Configures an Ubuntu machine to install and setup Nginx
 
 # Update package list and install nginx
 apt-get update -y
 apt-get install nginx -y
 
-# Create a simple HTML page with "Holberton School"
-echo "Holberton School" > /var/www/html/index.html
+# Create the index page with "Holberton School"
+cat > /var/www/html/index.nginx-debian.html << INNEREOF
+Holberton School
+INNEREOF
 
-# Ensure nginx is running
+# Ensure nginx is running (without systemctl)
 service nginx start
+
+# Verify the setup and output status code
+status_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/)
+echo "$status_code"
+
+# Verify nginx is installed
+nginx -v 2>&1 | grep -q "nginx" && echo "nginx"
+
+# Verify content
+curl -s http://localhost/ | grep -q "Holberton School" && echo "Holberton School"
