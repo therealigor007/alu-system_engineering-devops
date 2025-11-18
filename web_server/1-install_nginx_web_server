@@ -1,24 +1,19 @@
 #!/usr/bin/env bash
-# Configures an Ubuntu machine to install and setup Nginx
+# Script that configures a new Ubuntu machine with nginx
 
-# Update package list and install nginx
+# Update package list
 apt-get update -y
+
+# Install nginx
 apt-get install nginx -y
 
-# Create the index page with "Holberton School"
-cat > /var/www/html/index.nginx-debian.html << INNEREOF
-Holberton School
-INNEREOF
+# Create a simple HTML page with "Holberton School"
+echo "Holberton School for the win!" > /var/www/html/index.nginx-debian.html
 
-# Ensure nginx is running (without systemctl)
+# Ensure nginx is configured to listen on port 80 (default config should work)
+# Start nginx without using systemctl
 service nginx start
 
-# Verify the setup and output status code
-status_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/)
-echo "$status_code"
+# Restart nginx to apply changes (without using systemctl)
+service nginx restart
 
-# Verify nginx is installed
-nginx -v 2>&1 | grep -q "nginx" && echo "nginx"
-
-# Verify content
-curl -s http://localhost/ | grep -q "Holberton School" && echo "Holberton School"
