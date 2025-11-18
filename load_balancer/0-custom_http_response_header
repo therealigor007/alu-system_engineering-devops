@@ -1,41 +1,34 @@
 #!/usr/bin/env bash
-# Configures Nginx with a custom HTTP response header
+# Script that configures Nginx with a custom HTTP response header
 
-# Update and install nginx
+# Update package list
 apt-get update -y
+
+# Install nginx
 apt-get install nginx -y
 
-# Get the hostname
+# Get the hostname of the server
 HOSTNAME=$(hostname)
 
-# Configure Nginx to add custom header
-# Add the header to the http block in nginx.conf
-sed -i "/http {/a \    add_header X-Served-By $HOSTNAME;" /etc/nginx/nginx.conf
+# Backup original default config
+cp /etc/nginx/sites-available/default /etc/nginx/sites-available/default.backup
 
-# Alternative: Add to default site configuration
-cat > /etc/nginx/sites-available/default << INNEREOF
-server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
+# Add the custom header to the nginx config
+# Insert the add_header directive in the server block
+sed -i "/server_name _;/a \\\tadd_header X-Served-By $HOSTNAME;" /etc/nginx/sites-available/default
 
-    root /var/www/html;
-    index index.html index.htm index.nginx-debian.html;
+# If the above doesn't work (server_name not found), try another approach
+# Add it after the 'listen' directives
+if ! grep -q "X-Served-By" /etc/nginx/sites-available/default; then
+    sed -i "/listen \[::\]:80 default_server;/a \\\tadd_header X-Served-By $HOSTNAME;" /etc/nginx/sites-available/default
+fi
 
-    server_name _;
+# Create a simple HTML page
+echo "Hello World!" > /var/www/html/index.html
 
-    add_header X-Served-By $HOSTNAME;
+# Test nginx configuration
+nginx -t
 
-    location / {
-        try_files \$uri \$uri/ =404;
-    }
-}
-INNEREOF
-
-# Ensure the default page exists with content
-echo "Holberton School" > /var/www/html/index.nginx-debian.html
-
-# Restart nginx without systemctl
+# Restart nginx to apply changes (without using systemctl)
 service nginx restart
 
-# Verify the configuration
-echo "1"
